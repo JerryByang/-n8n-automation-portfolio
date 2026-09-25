@@ -17,3 +17,4 @@ Here's what happens the moment a claim comes in, whether through a form, email, 
 No manually organizing information across every submission. No chasing missing documents.
 
 The system handles the intake work so the claims team can process more claims and move them through review faster, without adding headcount.
+<img width="2528" height="1068" alt="AI insurance claim intake agents" src="https://github.com/user-attachments/assets/990f51b7-ddae-4311-8348-a55cc95d4f64" />
