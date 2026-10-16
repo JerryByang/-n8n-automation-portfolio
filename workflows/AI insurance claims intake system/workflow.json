@@ -1,0 +1,858 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "formId": "pbYPpZ"
+      },
+      "type": "n8n-nodes-tallyforms.tallyTrigger",
+      "typeVersion": 2,
+      "position": [
+        -1792,
+        -80
+      ],
+      "id": "5f80d304-3015-4340-88b4-ccd6119cc860",
+      "name": "OnlineForm",
+      "webhookId": "e65fa9d8-6fcf-455a-b823-281ea222d1cc",
+      "credentials": {
+        "tallyApi": {
+          "id": "I0aO25QRrtDBYS6S",
+          "name": "Tally account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7e37e515-08b1-4747-90ee-043357d290f8",
+              "name": "policy_number",
+              "value": "={{ $json.question_GJe7PL.value }}",
+              "type": "string"
+            },
+            {
+              "id": "4b413985-0d20-4b6b-9f39-6c6eb10e72cd",
+              "name": "claimant_name",
+              "value": "={{ $json.question_o79xjO.value }}",
+              "type": "string"
+            },
+            {
+              "id": "deec91f2-8a8b-41aa-9f8d-2c5c5ee0a6da",
+              "name": "claimant_email",
+              "value": "={{ $json.question_OJQVNY.value }}",
+              "type": "string"
+            },
+            {
+              "id": "0804ae98-d165-4e91-895d-699b3dac0eeb",
+              "name": "incident_date",
+              "value": "={{ $json.question_VMpx6M.value }}",
+              "type": "string"
+            },
+            {
+              "id": "2552f3d9-b317-48ab-ab41-ccad804decbd",
+              "name": "incident_location",
+              "value": "={{ $json.question_PXRPqB.value }}",
+              "type": "string"
+            },
+            {
+              "id": "f28a90ca-519e-48b8-98d1-ab0263fccf80",
+              "name": "incident_description",
+              "value": "={{ $json.question_EJqaOB.value }}",
+              "type": "string"
+            },
+            {
+              "id": "c633d0c5-d22c-41e9-8e32-def9dec6d0ff",
+              "name": "claim_type",
+              "value": "={{ $json.question_8Pqy6r.value }}",
+              "type": "string"
+            },
+            {
+              "id": "0996cf24-4b69-4b9a-b485-92dfca2aed3b",
+              "name": "source_channel",
+              "value": "Tally",
+              "type": "string"
+            },
+            {
+              "id": "ec98be28-04a2-4aac-9116-758d254a9b3f",
+              "name": "photo_evidence_url",
+              "value": "={{ $json.question_rdDqZ2.value }}",
+              "type": "string"
+            },
+            {
+              "id": "f72ae040-2e05-4c75-8673-7ab96aa461ae",
+              "name": "cost_document_url",
+              "value": "={{ $json.question_yEMr98.value }}",
+              "type": "string"
+            },
+            {
+              "id": "8c613ec2-7dfb-40f3-9095-778e7f8a8d32",
+              "name": "missing_fields",
+              "value": "={{ [] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1648,
+        -80
+      ],
+      "id": "b054914c-d1df-4019-b902-c910977f695b",
+      "name": "ClaimExtraction"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const claim = $json;\n\nconst requiredTextFields = [\n  { key: 'policy_number', label: 'Policy Number' },\n  { key: 'claimant_name', label: 'Full Name' },\n  { key: 'claimant_email', label: 'Email' },\n  { key: 'incident_date', label: 'Date of Incident' },\n  { key: 'incident_location', label: 'Location of Incident' },\n  { key: 'incident_description', label: 'Description of Incident' },\n  { key: 'claim_type', label: 'Type of Claim' },\n];\n\nlet missing = [];\n\n// Check text fields\nfor (const field of requiredTextFields) {\n  if (!claim[field.key] || claim[field.key].toString().trim() === '') {\n    missing.push(field.label);\n  }\n}\n\n// Check documents\nif (!claim.photo_evidence_url || claim.photo_evidence_url.trim() === '') {\n  missing.push('Photo Evidence');\n}\nif (!claim.cost_document_url || claim.cost_document_url.trim() === '') {\n  missing.push('Supporting Cost Document');\n}\n\nclaim.missing_fields = missing;\nclaim.is_complete = missing.length === 0;\n\nreturn { json: claim };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        -80
+      ],
+      "id": "16e14a70-da51-4150-b1a0-3f4a36397d95",
+      "name": "CheckMissingDetails"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "30ef9980-4e09-4618-9919-6361e50e3728",
+              "leftValue": "={{ $json.is_complete }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1360,
+        -80
+      ],
+      "id": "6d2659a8-bb75-413b-934b-3acba75803eb",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are drafting a short, polite email to an insurance claimant whose claim submission is missing required information.\n\nClaimant name: {{ $json.claimant_name }}\nMissing items: {{ $json.missing_fields.join(\", \") }}\n\nWrite a brief, professional email (not more than 120 words) that:\n- Thanks them for submitting their claim\n- Clearly lists what's missing (use the items provided)\n- Explains they can reply to this email or resubmit the form with the missing information\n- Does not include a subject line, just the email body\n- Do not use em dashes\n\nOutput only the email body text, nothing else."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -1184,
+        32
+      ],
+      "id": "ef74a74b-946f-4e68-b3e5-6212fdc291d6",
+      "name": "MissingInfoMessage",
+      "credentials": {
+        "openAiApi": {
+          "id": "8ZA4Q3JiVhs4OoNE",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are drafting a short, warm acknowledgment email to an insurance claimant confirming their claim has been received successfully with all required information.\n\nClaimant name: {{ $json.claimant_name }}\nClaim type: {{ $json.claim_type }}\nIncident date: {{ $json.incident_date }}\nIncident location: {{ $json.incident_location }}\n\nWrite a brief, professional email (not more than 100 words) that:\n- Thanks them for submitting their claim\n- Confirms it was received with all required information (mention the incident date and location briefly to show it's personalized, not generic)\n- Lets them know their claim is now being reviewed and they'll be contacted with updates\n- Does not include a subject line, just the email body\n- Do not use em dashes\n\nOutput only the email body text, nothing else."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -1200,
+        -208
+      ],
+      "id": "e3d0b4bf-feac-493d-81a4-bc168dfbe378",
+      "name": "AcknowledgementMessage",
+      "credentials": {
+        "openAiApi": {
+          "id": "8ZA4Q3JiVhs4OoNE",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BRW9VNUTW",
+          "mode": "list",
+          "cachedResultName": "autoclaim"
+        },
+        "text": "=*New Claim Received — {{ $('ClaimExtraction').item.json.claim_type }}*  *Claimant:* {{ $('ClaimExtraction').item.json.claimant_name }} *Policy Number:* {{ $('ClaimExtraction').item.json.policy_number }} *Email:* {{ $('ClaimExtraction').item.json.claimant_email }} *Claim Type:* {{ $('ClaimExtraction').item.json.claim_type }}  *Incident Date:* {{ $('ClaimExtraction').item.json.incident_date }} *Incident Location:* {{ $('ClaimExtraction').item.json.incident_location }} *Description:* {{ $('ClaimExtraction').item.json.incident_description }}  *Supporting Documents:* - Photo Evidence: {{ $('ClaimExtraction').item.json.photo_evidence_url }} - Cost Document: {{ $('ClaimExtraction').item.json.cost_document_url }}  *Status:* ✅ All required information received *Source:* {{ $('ClaimExtraction').item.json.source_channel }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        -752,
+        -96
+      ],
+      "id": "9548a6b5-0a7e-4fd2-881b-cb92d1ff6338",
+      "name": "NotifyClaimTeam",
+      "webhookId": "1ec4312f-80de-410f-94a4-5ecdb374c152",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "hMjUgGuPwx60Gcet",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('ClaimExtraction').item.json.claimant_email }}",
+        "subject": "We've Received Your Claim",
+        "emailType": "text",
+        "message": "={{ $json.output[0].content[0].text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -896,
+        -208
+      ],
+      "id": "c9f89e58-ef18-42a2-831b-f940fa97e714",
+      "name": "AcknowledgeClaimEmail",
+      "webhookId": "b4ed25a3-0df5-4a00-9772-30eb70be892c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FLL8F3haVJXO9dAy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "=={{ $('ClaimExtraction').item.json.claimant_email }}\"",
+        "subject": "Action Needed: Missing Information on Your Claim Submission",
+        "emailType": "text",
+        "message": "={{ $json.output[0].content[0].text }}\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -880,
+        32
+      ],
+      "id": "e95d9a11-ff75-426c-bd96-056194a66531",
+      "name": "MissingInfoEmail",
+      "webhookId": "f2934421-62b6-457c-a464-abb851cf1588",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FLL8F3haVJXO9dAy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "binaryPropertyName": "={{ $json.photo_evidence_binary_key }}",
+        "options": {
+          "channelId": "C0BRW9VNUTW"
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        -144,
+        368
+      ],
+      "id": "babc4d63-40cc-4ecb-839d-0d6bda23e6be",
+      "name": "GmailUploadPhoto",
+      "webhookId": "1279e9a4-56dd-4287-880f-d1c80e4e6a84",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "hMjUgGuPwx60Gcet",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BRW9VNUTW",
+          "mode": "list",
+          "cachedResultName": "autoclaim"
+        },
+        "text": "=*New Claim Received — {{ $('GmailCheckMissingDetails').item.json.claim_type }}*  *Claimant:* {{ $('GmailCheckMissingDetails').item.json.claimant_name }} *Policy Number:* {{ $('GmailCheckMissingDetails').item.json.policy_number }} *Email:* {{ $('GmailCheckMissingDetails').item.json.claimant_email }} *Claim Type:* {{ $('GmailCheckMissingDetails').item.json.claim_type }}  *Incident Date:* {{ $('GmailCheckMissingDetails').item.json.incident_date }} *Incident Location:* {{ $('GmailCheckMissingDetails').item.json.incident_location }} *Description:* {{ $('GmailCheckMissingDetails').item.json.incident_description }}  *Status:* ✅ All required information received *Source:* Gmail",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        -144,
+        224
+      ],
+      "id": "82b45e4b-b781-487e-aa21-a53dc6e82900",
+      "name": "GmailNotifyClaimTeam",
+      "webhookId": "3f1e1c35-9f82-4869-bc77-3cc333281148",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "hMjUgGuPwx60Gcet",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are drafting a short, warm acknowledgment email to an insurance claimant confirming their claim has been received successfully with all required information.\n\nClaimant name: {{ $json.claimant_name }}\nClaim type: {{ $json.claim_type }}\nIncident date: {{ $json.incident_date }}\nIncident location: {{ $json.incident_location }}\n\nWrite a brief, professional email (not more than 100 words) that:\n- Thanks them for submitting their claim\n- Confirms it was received with all required information\n- Lets them know their claim is now being reviewed and they'll be contacted with updates\n- Does not include a subject line, just the email body\n- Do not use em dashes\n\nOutput only the email body text, nothing else."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -736,
+        208
+      ],
+      "id": "d6388e9f-8edb-47d0-8307-19c94bc1b987",
+      "name": "GmailAcknowledgement",
+      "credentials": {
+        "openAiApi": {
+          "id": "8ZA4Q3JiVhs4OoNE",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('GmailCheckMissingDetails').item.json.claimant_email }}",
+        "subject": "Action Needed: Missing Information on Your Claim Submission",
+        "emailType": "text",
+        "message": "={{ $json.output[0].content[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -544,
+        512
+      ],
+      "id": "c6a9beec-949c-42ca-a228-00a136122024",
+      "name": "GmailMissingInfoEmail",
+      "webhookId": "f07bd446-d70f-4bb7-a6dc-d2f5e17c5966",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FLL8F3haVJXO9dAy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are drafting a short, polite email to an insurance claimant whose claim submission is missing required information.\n\nClaimant name: {{ $json.claimant_name }}\nMissing items: {{ $json.missing_fields.join(\", \") }}\n\nWrite a brief, professional email (not more than 120 words) that:\n- Thanks them for submitting their claim\n- Clearly lists what's missing (use the items provided)\n- Explains they can reply to this email or resubmit the form with the missing information\n- Does not include a subject line, just the email body\n- Do not use em dashes\n\nOutput only the email body text, nothing else."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -880,
+        512
+      ],
+      "id": "a496a5eb-325c-4600-959c-26be14a03668",
+      "name": "GmailMissingInfoMessage",
+      "credentials": {
+        "openAiApi": {
+          "id": "8ZA4Q3JiVhs4OoNE",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c438c4a0-85d8-4449-9477-a7ad1d423b4d",
+              "leftValue": "={{ $json.is_complete }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -880,
+        304
+      ],
+      "id": "25b6ca9e-c167-4d73-9d7a-171974d3fa27",
+      "name": "GmailIf"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const claim = $json;\n\nconst requiredTextFields = [\n  { key: 'policy_number', label: 'Policy Number' },\n  { key: 'claimant_name', label: 'Full Name' },\n  { key: 'claimant_email', label: 'Email' },\n  { key: 'incident_date', label: 'Date of Incident' },\n  { key: 'incident_location', label: 'Location of Incident' },\n  { key: 'incident_description', label: 'Description of Incident' },\n  { key: 'claim_type', label: 'Type of Claim' },\n];\n\nlet missing = [];\n\nfor (const field of requiredTextFields) {\n  if (!claim[field.key] || claim[field.key].toString().trim() === '') {\n    missing.push(field.label);\n  }\n}\n\nif (!claim.photo_evidence_binary_key) {\n  missing.push('Photo Evidence');\n}\nif (!claim.cost_document_binary_key) {\n  missing.push('Supporting Cost Document');\n}\n\nclaim.missing_fields = missing;\nclaim.is_complete = missing.length === 0;\n\nreturn { json: claim, binary: $input.item.binary };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1056,
+        304
+      ],
+      "id": "9b7f7746-8420-4e15-bbe6-038421b556d8",
+      "name": "GmailCheckMissingDetails"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1408,
+        368
+      ],
+      "id": "a35317e6-4407-4335-9285-d55a5d0f0626",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const claim = $input.first().json;\nconst classifications = $input.last().json;\n\nclaim.photo_evidence_binary_key = '';\nclaim.cost_document_binary_key = '';\n\nfor (const [key, type] of Object.entries(classifications)) {\n  if (type === 'photo_evidence') {\n    claim.photo_evidence_binary_key = key;\n  } else if (type === 'cost_document') {\n    claim.cost_document_binary_key = key;\n  }\n}\n\nreturn { json: claim, binary: $input.last().binary };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1216,
+        304
+      ],
+      "id": "ece8362b-9907-47a7-8e2b-2e23c3f7e0bc",
+      "name": "MergeGmailData"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const binaryData = $input.item.binary || {};\nconst binaryKeys = Object.keys(binaryData);\nconst result = {};\n\nfor (const key of binaryKeys) {\n  const mime = binaryData[key].mimeType;\n  if (mime && mime.startsWith('image/')) {\n    result[key] = 'photo_evidence';\n  } else if (mime === 'application/pdf') {\n    result[key] = 'cost_document';\n  } else {\n    result[key] = 'unclear';\n  }\n}\n\nreturn { json: result, binary: binaryData };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        368
+      ],
+      "id": "999bfb47-1d81-4a9a-a582-6cad4247a2fd",
+      "name": "ClassifyAttachments"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const rawText = $json.output[0].content[0].text;\nconst parsed = JSON.parse(rawText);\n\nconst claim = {\n  policy_number: parsed.policy_number || '',\n  claimant_name: parsed.claimant_name || '',\n  claimant_email: parsed.claimant_email || '',\n  incident_date: parsed.incident_date || '',\n  incident_location: parsed.incident_location || '',\n  incident_description: parsed.incident_description || '',\n  claim_type: parsed.claim_type || '',\n  source_channel: 'Gmail',\n  photo_evidence_url: '',\n  cost_document_url: '',\n  missing_fields: []\n};\n\nreturn { json: claim };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        224
+      ],
+      "id": "a952ff15-9252-43dc-b949-ad63ff194b8f",
+      "name": "GmailClaimExtraction"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are extracting structured claim information from an insurance claim email.\n\nEmail sender: {{ $json.from.value[0].address }}\nEmail subject: {{ $json.subject }}\nEmail body:\n{{ $json.text }}\n\n\nExtract the following fields from the email content. If a field is not mentioned or unclear, return an empty string for it.\n\nReturn ONLY valid JSON in this exact structure, nothing else:\n{\n  \"policy_number\": \"\",\n  \"claimant_name\": \"\",\n  \"claimant_email\": \"\",\n  \"incident_date\": \"\",\n  \"incident_location\": \"\",\n  \"incident_description\": \"\",\n  \"claim_type\": \"\"\n}\n\nRules:\n- claimant_email should default to the sender's email address if not otherwise stated in the body\n- claim_type must be one of: Auto, Property, Liability, Health, or empty string if unclear\n- incident_date should be normalized to YYYY-MM-DD format if a date is found, otherwise empty string\n- incident_location must be a specific place name, address, or identifiable location (e.g. a street, estate, city, or landmark). Do NOT use a description of the circumstance (such as \"traffic stop\", \"intersection\", \"parking lot\") as the location unless a specific place name is also given. If no specific location is stated, return an empty string.\n- Do not include any explanation, markdown formatting, or text outside the JSON object"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -1696,
+        224
+      ],
+      "id": "ac48f71a-c952-4adc-9063-46bb2e4b63f6",
+      "name": "AIClaimExtraction",
+      "credentials": {
+        "openAiApi": {
+          "id": "8ZA4Q3JiVhs4OoNE",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "maxResults": 1,
+        "filters": {},
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1840,
+        272
+      ],
+      "id": "1d33ab2d-0f7b-433c-bbeb-4ca46d66e886",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "FLL8F3haVJXO9dAy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "binaryPropertyName": "={{ $json.cost_document_binary_key }}",
+        "options": {
+          "channelId": "C0BRW9VNUTW"
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        -144,
+        528
+      ],
+      "id": "b4819dc0-b2c1-4419-8a25-5e64bace13f5",
+      "name": "GmailUploadCostDoc",
+      "webhookId": "1279e9a4-56dd-4287-880f-d1c80e4e6a84",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "hMjUgGuPwx60Gcet",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OnlineForm": {
+      "main": [
+        [
+          {
+            "node": "ClaimExtraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClaimExtraction": {
+      "main": [
+        [
+          {
+            "node": "CheckMissingDetails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckMissingDetails": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AcknowledgementMessage",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "NotifyClaimTeam",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MissingInfoMessage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MissingInfoMessage": {
+      "main": [
+        [
+          {
+            "node": "MissingInfoEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AcknowledgementMessage": {
+      "main": [
+        [
+          {
+            "node": "AcknowledgeClaimEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GmailNotifyClaimTeam": {
+      "main": [
+        []
+      ]
+    },
+    "GmailAcknowledgement": {
+      "main": [
+        []
+      ]
+    },
+    "GmailMissingInfoMessage": {
+      "main": [
+        [
+          {
+            "node": "GmailMissingInfoEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GmailIf": {
+      "main": [
+        [
+          {
+            "node": "GmailNotifyClaimTeam",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GmailAcknowledgement",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GmailUploadPhoto",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GmailUploadCostDoc",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GmailMissingInfoMessage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GmailCheckMissingDetails": {
+      "main": [
+        [
+          {
+            "node": "GmailIf",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "MergeGmailData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeGmailData": {
+      "main": [
+        [
+          {
+            "node": "GmailCheckMissingDetails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClassifyAttachments": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "GmailClaimExtraction": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AIClaimExtraction": {
+      "main": [
+        [
+          {
+            "node": "GmailClaimExtraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "ClassifyAttachments",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AIClaimExtraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1e4c67df937fb3e12f0678ad22c2720d29743a3d38c122e7630f1f3ca2f0da64"
+  }
+}
