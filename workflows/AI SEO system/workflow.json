@@ -1,0 +1,2043 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        64,
+        32
+      ],
+      "id": "67f9ab5b-7d50-4f95-941a-0feca0cce376",
+      "name": "WeeklyTrigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dataforseo.com/v3/dataforseo_labs/google/related_keywords/live",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=[\n  {\n    \"keyword\": \"AI automation\",\n    \"location_code\": 2840,\n    \"language_code\": \"en\",\n    \"depth\": 3,\n    \"limit\": 100,\n    \"include_seed_keyword\": true\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        192,
+        32
+      ],
+      "id": "d1de1605-139f-4817-adb8-9c852fdd6151",
+      "name": "GetKeywords"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8d2a682c-94c3-47f9-949a-3c6a247cadea",
+              "leftValue": "={{ $json.volume }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "65479a3f-30a2-4027-a58c-1030b751bc7a",
+              "leftValue": "={{ $json.difficulty }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "826fb3b3-5db7-46dd-81cd-1c897315501f",
+              "leftValue": "={{ $json.difficulty }}",
+              "rightValue": 40,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            },
+            {
+              "id": "d2167802-76f6-412f-85b0-e41c9b0ab680",
+              "leftValue": "={{ ['informational','commercial'].includes($json.intent) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        32
+      ],
+      "id": "13e113a0-e8d7-4241-80c3-1caff5ea557e",
+      "name": "FilterKeywords"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nreturn [{\n  json: {\n    list: rows.map(r => `${r.keyword} | vol ${r.volume} | ${r.intent}`).join('\\n')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        32
+      ],
+      "id": "9479d519-2912-43fa-abb6-e9bd1e42fc9b",
+      "name": "CombineKeywords"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "GPT-5"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You filter keyword ideas for the blog of a B2B AI automation agency. The target reader is a business owner or operations leader who is evaluating or planning to implement AI automation in their company to save time or cost. Keep a keyword only if that person would plausibly search it.\n\nRemove keywords whose searcher is a learner or job seeker (courses, certificates, beginner tutorials, jobs), a developer (code, github, open source setup), a consumer or hobbyist (chatbots with no restrictions, free AI app lists, top AI apps, roleplay), or someone looking for forum threads (reddit). Remove brand navigation queries.\n\nAlso remove keywords that ask for free tools, general consumer productivity or tool roundups unrelated to business automation, and single broad head terms such as \"ai automation\".\n\nReturn only JSON in this exact shape: {\"keep\": [\"keyword one\", \"keyword two\"]}\nUse each keyword exactly as written.\n\nKeywords to judge:\n{{ $json.list }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        816,
+        32
+      ],
+      "id": "1e9e63f3-c623-4087-bf1a-c2e7dfd289e7",
+      "name": "JudgeRelevance",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk",
+          "mode": "list",
+          "cachedResultName": "Keywords",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1280,
+        32
+      ],
+      "id": "2622c978-650c-4aa9-bde9-1a2864757728",
+      "name": "GetExistingKeywords",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const existing = new Set(\n  $('GetExistingKeywords').all()\n    .map(i => (i.json.keyword || '').toLowerCase().trim())\n    .filter(Boolean)\n);\n\nreturn $('ScoreKeywords').all()\n  .filter(i => !existing.has(i.json.keyword.toLowerCase().trim()))\n  .map(i => ({ json: i.json }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        32
+      ],
+      "id": "51d7a506-3565-48ee-820c-2bb5bc50f50e",
+      "name": "CheckDuplicateKeywords"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk",
+          "mode": "list",
+          "cachedResultName": "Keywords",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "keyword": "={{ $json.keyword }}",
+            "volume": "={{ $json.volume }}",
+            "difficulty": "={{ $json.difficulty }}",
+            "intent": "={{ $json.intent }}",
+            "cpc": "={{ $json.cpc }}",
+            "has_paa": "={{ $json.has_paa }}",
+            "score": "={{ $json.score }}",
+            "scheduled_day": "={{ $json.scheduled_day }}",
+            "status": "={{ $json.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "keyword",
+              "displayName": "keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "volume",
+              "displayName": "volume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "difficulty",
+              "displayName": "difficulty",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cpc",
+              "displayName": "cpc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "has_paa",
+              "displayName": "has_paa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "scheduled_day",
+              "displayName": "scheduled_day",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2048,
+        32
+      ],
+      "id": "8fe17883-a0e7-46bc-b2b9-f4f7e9f6f311",
+      "name": "SaveKeywords"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.tasks?.[0]?.result?.[0]?.items ?? [];\n\nreturn items.map(i => ({\n  json: {\n    keyword: i.keyword_data.keyword,\n    volume: i.keyword_data.keyword_info?.search_volume ?? 0,\n    difficulty: i.keyword_data.keyword_properties?.keyword_difficulty ?? null,\n    intent: i.keyword_data.search_intent_info?.main_intent ?? null,\n    cpc: i.keyword_data.keyword_info?.cpc ?? null,\n    has_paa: i.keyword_data.serp_info?.serp_item_types?.includes('people_also_ask') ?? false,\n    related_keywords: i.related_keywords ?? []\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        32
+      ],
+      "id": "27a88d17-0ee3-47a6-b0d9-7a8992f60f80",
+      "name": "SplitKeywords"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output[0].content[0].text\n  .replace(/```json|```/g, '')\n  .trim();\nconst keep = JSON.parse(raw).keep.map(k => k.toLowerCase().trim());\n\nconst rows = $('FilterKeywords').all().map(i => i.json);\n\nreturn rows\n  .filter(r => keep.includes(r.keyword.toLowerCase().trim()))\n  .map(r => ({\n    json: {\n      ...r,\n      score: r.volume / Math.pow(r.difficulty + 1, 2)\n    }\n  }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        32
+      ],
+      "id": "90d13397-e7eb-41aa-b593-346b5391ab51",
+      "name": "ScoreKeywords"
+    },
+    {
+      "parameters": {
+        "jsCode": "const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];\n\nconst rows = $input.all().map(i => i.json)\n  .sort((a, b) => b.score - a.score)\n  .slice(0, 5);\n\nreturn rows.map((r, i) => ({\n  json: {\n    ...r,\n    scheduled_day: days[i],\n    status: r.source === 'related_backfill' ? 'pending_draft_needs_data' : 'pending_draft'\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        32
+      ],
+      "id": "01802d05-1c65-425f-b5a6-d7e81719b46a",
+      "name": "RankAndCap"
+    },
+    {
+      "parameters": {
+        "jsCode": "const current = $input.all().map(i => i.json);\nconst needed = 5 - current.length;\n\nif (needed <= 0) return current.map(r => ({ json: r }));\n\nconst existing = new Set(\n  $('GetExistingKeywords').all()\n    .map(i => (i.json.keyword || '').toLowerCase().trim())\n);\nconst usedThisRun = new Set(current.map(r => r.keyword.toLowerCase().trim()));\n\nconst allFiltered = $('FilterKeywords').all().map(i => i.json);\nconst candidatePool = new Map();\n\nallFiltered.forEach(r => {\n  (r.related_keywords || []).forEach(rk => {\n    const key = rk.toLowerCase().trim();\n    if (!existing.has(key) && !usedThisRun.has(key) && !candidatePool.has(key)) {\n      candidatePool.set(key, {\n        keyword: rk, volume: null, difficulty: null, intent: null,\n        cpc: null, has_paa: false, score: 0, source: 'related_backfill'\n      });\n    }\n  });\n});\n\nconst topUp = Array.from(candidatePool.values()).slice(0, needed);\n\nreturn [...current, ...topUp].map(r => ({ json: r }));// Loop over input items and add a new field called 'myNewField' to the "
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        32
+      ],
+      "id": "bda6fc36-74a7-47f3-9de7-8d633fb347cb",
+      "name": "TopUpFromRelated"
+    },
+    {
+      "parameters": {
+        "content": "## KEWORD RESEARCH\nRuns automatically once a week.\n\nPull data — Searches Google for keywords using a broad seed and gets ~90 results with search volume, difficulty, and buyer intent.\nFilter — Removes keywords with too little search volume, too much competition, or the wrong intent.\nCheck relevance — AI reviews the list and keeps only keywords a real business buyer would search (drops student, developer, and hobbyist searches).\nScore — Ranks keywords by how realistic they are to rank for right now, favoring easier wins over pure search volume.\nRemove duplicates — Checks against past weeks so we never repeat a keyword already used.\nFill gaps — If too few new keywords are found, pulls fresh related terms instead of reusing old ones.\nFinalize — Picks the top 5, assigns one to each weekday (Monday-Friday), and saves them to the spreadsheet.\n\n",
+        "height": 384,
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "808a1676-b04a-4ecb-b65d-05956f2e77f1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=[\n  {\n    \"keyword\": \"{{ $json.keyword }}\",\n    \"location_code\": 2840,\n    \"language_code\": \"en\",\n    \"device\": \"desktop\",\n    \"depth\": 10\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        144,
+        272
+      ],
+      "id": "60621eb8-f1f5-40ed-b8f0-b0224bf6d48b",
+      "name": "GetSERP"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $json.tasks?.[0]?.result?.[0];\nconst items = data?.items ?? [];\n\nconst excludedDomains = ['reddit.com', 'youtube.com'];\n\nconst organicResults = items\n  .filter(i => i.type === 'organic')\n  .filter(i => !excludedDomains.some(d => (i.domain || '').includes(d)))\n  .slice(0, 5)\n  .map(i => ({\n    title: i.title,\n    url: i.url,\n    domain: i.domain,\n    description: i.description\n  }));\n\nconst paaQuestions = items\n  .filter(i => i.type === 'people_also_ask')\n  .flatMap(i => i.items || [])\n  .map(q => q.title);\n\nreturn {\n  json: {\n    keyword: data?.keyword,\n    top_organic_results: organicResults,\n    paa_questions: paaQuestions\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        272
+      ],
+      "id": "d20ff385-1d73-45ae-bb03-57fd29e6b18f",
+      "name": "ParseSERP"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "top_organic_results",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        464,
+        272
+      ],
+      "id": "6af7960e-a304-4c07-ae94-12e746bd0e3c",
+      "name": "SplitByResult"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst grouped = {};\n\nitems.forEach(item => {\n  const kw = item.json.keyword;\n  if (!grouped[kw]) grouped[kw] = [];\n  if (grouped[kw].length < 3) grouped[kw].push(item);\n});\n\nreturn Object.values(grouped).flat();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        272
+      ],
+      "id": "b86529f2-e976-46d5-8b4c-d41175574d78",
+      "name": "TrimToTop3"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.top_organic_results.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        784,
+        272
+      ],
+      "id": "c33be269-ca4c-4340-82d2-b89a84cd10fc",
+      "name": "FetchCompetitorPages",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "body_text",
+              "cssSelector": "body"
+            }
+          ]
+        },
+        "options": {
+          "trimValues": false
+        }
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        208
+      ],
+      "id": "ca2b2ad8-561f-488e-bf2a-84aa13137481",
+      "name": "ExtractArticleText"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => ({\n  json: {\n    keyword: item.json.keyword,\n    url: item.json.top_organic_results?.url || item.json.url,\n    title: item.json.top_organic_results?.title || null,\n    description: item.json.top_organic_results?.description || null,\n    body_text: null,\n    fetch_failed: true\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        416
+      ],
+      "id": "b04b15cd-af47-431c-b92e-1675bf2f0f23",
+      "name": "HandleFetchErrors",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const text = item.json.body_text || '';\n  return {\n    json: {\n      ...item.json,\n      body_text: text.slice(0, 6000)\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        352
+      ],
+      "id": "9dfe02da-72aa-48e6-b32a-0f2c2c512b19",
+      "name": "TrimBodyText"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst grouped = {};\n\nitems.forEach(item => {\n  const kw = item.json.keyword;\n  if (!grouped[kw]) grouped[kw] = [];\n  grouped[kw].push(item.json);\n});\n\nreturn Object.entries(grouped).map(([keyword, pages]) => ({\n  json: {\n    keyword,\n    pages\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        352
+      ],
+      "id": "44dcb155-f8ef-46b2-a7d1-fd7ee3f84ddc",
+      "name": "GroupByKeyword"
+    },
+    {
+      "parameters": {
+        "jsCode": "const extracted = $input.all();\nconst original = $('TrimToTop3').all();\n\nreturn extracted.map((item, i) => ({\n  json: {\n    keyword: original[i]?.json?.keyword,\n    url: original[i]?.json?.top_organic_results?.url || original[i]?.json?.url,\n    title: original[i]?.json?.top_organic_results?.title,\n    body_text: item.json.body_text\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        208
+      ],
+      "id": "e557d9ff-ae00-4f4e-a71c-c239d6443718",
+      "name": "RestoreKeywordFields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1296,
+        352
+      ],
+      "id": "74f210cb-03dc-4b2c-bcbf-24bcd58f3548",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are building a content brief for a B2B blog post targeting the keyword: {{ $json.keyword }}\n\nBelow are the top 3 pages currently ranking for this keyword. Read them and extract what the post needs to cover to compete.\n\n{{ $json.pages.map((p, i) => `COMPETITOR ${i + 1}: ${p.title}\\nURL: ${p.url}\\n${p.body_text}`).join('\\n\\n---\\n\\n') }}\n\nReturn only JSON in this exact shape:\n{\n  \"shared_subtopics\": [\"topic every competitor covers, so the post must include it\"],\n  \"content_gaps\": [\"something none of the competitors cover well, a real opportunity\"],\n  \"recommended_headings\": [\"a suggested H2/H3 heading for the post, in order\"],\n  \"format_note\": \"one sentence on whether competitors are blog posts, product pages, or something else, and what that means for whether this keyword suits a blog post\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1760,
+        352
+      ],
+      "id": "c698343f-e7f0-4b37-9fdf-0a560f0e0833",
+      "name": "CompetitorBrief",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hgJGLmZGoOYLAj8aAMJtWskhzQZuQTkzcjIJrSGXtQ8",
+          "mode": "list",
+          "cachedResultName": "Briefs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgJGLmZGoOYLAj8aAMJtWskhzQZuQTkzcjIJrSGXtQ8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hgJGLmZGoOYLAj8aAMJtWskhzQZuQTkzcjIJrSGXtQ8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "keyword": "={{ $('GroupByKeyword').item.json.keyword }}",
+            "shared_subtopics": "={{ $json.output[0].content[0].text.shared_subtopics.join('; ') }}",
+            "recommended_headings": "={{ $json.output[0].content[0].text.recommended_headings.join('; ') }}",
+            "content_gaps": "={{ $json.output[0].content[0].text.content_gaps.join('; ') }}",
+            "format_note": "={{ $json.output[0].content[0].text.format_note }}",
+            "date_added": "={{ $now.toISODate() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "keyword",
+              "displayName": "keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "shared_subtopics",
+              "displayName": "shared_subtopics",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "content_gaps",
+              "displayName": "content_gaps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recommended_headings",
+              "displayName": "recommended_headings",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "format_note",
+              "displayName": "format_note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date_added",
+              "displayName": "date_added",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2048,
+        352
+      ],
+      "id": "694931c3-9f17-4845-92a9-b6a5ba02c5ea",
+      "name": "SaveBrief"
+    },
+    {
+      "parameters": {
+        "content": "## COMPETITOR ANALYSIS \nRuns after the 5 keywords are ranked and saved. For each keyword, researches what's already ranking on Google and extracts a content brief.\n\nFlow: GetSERP (pulls top 10 Google results per keyword) → ParseSERP (keeps organic results, drops Reddit/YouTube/ads, captures People Also Ask) → SplitByResult → TrimToTop3 (keeps only the top 3 competitor pages per keyword) → FetchCompetitorPages (downloads each page, errors routed to HandleFetchErrors as a fallback) → ExtractArticleText (pulls readable text from the page HTML) → RestoreKeywordFields (re-attaches keyword/url/title lost during extraction) → Merge (combines successful fetches with fallback data) → TrimBodyText (caps each page's text to stay within AI token limits) → GroupByKeyword (groups the 3 pages back under their keyword) → CompetitorBrief (AI reads the 3 competitor pages and outputs shared subtopics, content gaps, and recommended headings) → SaveBrief (writes the brief to the sheet).",
+        "height": 288,
+        "width": 576,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "fa41ca8c-dddb-4b48-b65a-3131e5490377",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Write a B2B blog post for an AI automation agency, targeting the keyword: {{ $('GroupByKeyword').item.json.keyword }}\n\nUse this structure, based on competitor research:\nRecommended headings: {{ $json.output[0].content[0].text.recommended_headings.join(', ') }}\n\nCover these subtopics, since competitors all include them and skipping them would hurt rankings:\n{{ $json.output[0].content[0].text.shared_subtopics.join(', ') }}\n\nAddress these gaps, since none of the top-ranking competitors cover them well, this is where the post can stand out:\n{{ $json.output[0].content[0].text.content_gaps.join(', ') }}\n\nWrite 1200 to 1800 words in markdown, with H2 and H3 headings matching the recommended structure. Voice: confident, direct, practical B2B tone, no filler, no hedging language, written for a business owner or operations leader evaluating AI automation, not a developer. Avoid generic AI-written phrasing like \"In today's fast-paced world\" or \"it's important to note.\" End with a short, non-pushy call to action inviting the reader to explore AI automation for their business.\n\nReturn only the markdown blog post, no commentary before or after it."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        544
+      ],
+      "id": "03af8165-5a0c-46eb-a2d6-0f62954193b1",
+      "name": "DraftBlogPost",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## CONTENT CREATION & DISTRIBUTION\nRuns after the competitor brief is saved. Drafts a blog post per keyword, holds it for editor approval, then publishes and repurposes it once approved.\n\nFlow: DraftBlogPost (GPT-4.1 writes a 1200-1800 word B2B post from the brief's headings, subtopics, and gaps) → MergeKeywordRow (re-attaches keyword row, draft, and headings) → UpdateDraftStatus (saves draft to the sheet as pending_approval) → DailyPostTrigger (9am Mon-Fri) → GetTodayPost (pulls the row scheduled for today with pending_approval status) → SendApprovalEmail (emails the draft and waits for the editor's free-text reply) → CheckApproval (approved goes to the True branch, anything else to the False branch). If edits are requested: ReviseDraft (Gemini rewrites the draft using the editor's notes) → Edit Fields (puts the revision into draft_content) → back to SendApprovalEmail. If approved, three parallel branches: PublishWebsite (posts keyword and draft to the site endpoint) → UpdateStatus (marks the row Published); RepurposeLinkedIn (Gemini condenses the draft into a LinkedIn post); RepurposeNewsletter (Gemini condenses the draft into a newsletter section) → PublishNewsletter (emails it via Gmail).",
+        "height": 432,
+        "width": 576,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        528
+      ],
+      "typeVersion": 1,
+      "id": "8f88e9c3-1ea0-42ee-8fd2-f2ef81f1a995",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map((item, i) => {\n  const keywordRow = $('RankAndCap').all()[i]?.json || {};\n  const draftText = item.json.output?.[0]?.content?.[0]?.text || '';\n  const headings = $('CompetitorBrief').all()[i]?.json?.output?.[0]?.content?.[0]?.text?.recommended_headings?.join('; ') || '';\n\n  return {\n    json: {\n      ...keywordRow,\n      draft_content: draftText,\n      recommended_headings: headings\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        544
+      ],
+      "id": "29fd4856-bc37-4ccb-84f5-20ca2523ed42",
+      "name": "MergeKeywordRow"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk",
+          "mode": "list",
+          "cachedResultName": "Keywords",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "keyword": "={{ $json.keyword }}",
+            "draft_content": "={{ $json.draft_content }}",
+            "recommended_headings": "={{ $json.recommended_headings }}",
+            "status": "pending_approval"
+          },
+          "matchingColumns": [
+            "keyword"
+          ],
+          "schema": [
+            {
+              "id": "keyword",
+              "displayName": "keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "volume",
+              "displayName": "volume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "difficulty",
+              "displayName": "difficulty",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cpc",
+              "displayName": "cpc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "has_paa",
+              "displayName": "has_paa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "related_keywords",
+              "displayName": "related_keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "scheduled_day",
+              "displayName": "scheduled_day",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "draft_content",
+              "displayName": "draft_content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "recommended_headings",
+              "displayName": "recommended_headings",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        544
+      ],
+      "id": "954922a6-fadb-43ec-9d4d-fe1305e6e61e",
+      "name": "UpdateDraftStatus"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        256,
+        720
+      ],
+      "id": "291100a1-d450-4f22-8cd5-e2da32a59c56",
+      "name": "DailyPostTrigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk",
+          "mode": "list",
+          "cachedResultName": "Keywords",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "scheduled_day",
+              "lookupValue": "={{ $now.format('cccc') }}"
+            },
+            {
+              "lookupColumn": "status",
+              "lookupValue": "pending_approval"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        720
+      ],
+      "id": "b0f2d5d8-3534-466d-9d63-c520c74277cf",
+      "name": "GetTodayPost"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "919fcf69-c13c-4e94-8788-71a8a2a62050",
+              "leftValue": "={{ $json.data.text }}",
+              "rightValue": "approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        720
+      ],
+      "id": "4a5ad9ba-ec56-49fa-a935-6f7330b1de27",
+      "name": "CheckApproval"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "byangamosjerry@gmail.com",
+        "subject": "Approval Required",
+        "message": "=  Keyword: {{ $json.keyword }}\n  \n  Draft:\n  {{ $json.draft_content }}\n  \n  Recommended headings:\n  {{ $json.recommended_headings }}",
+        "responseType": "freeText",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        720
+      ],
+      "id": "41c41bf3-566d-4535-80c0-d106a56e37fe",
+      "name": "SendApprovalEmail",
+      "webhookId": "16fd2bef-c0b7-4f92-9074-c02b69789d56"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are revising a blog draft based on editor feedback.\n\nOriginal draft:\n{{ $('GetTodayPost').item.json.draft_content }}\n\nEditor's notes:\n{{ $json.data.text }}\n\nRevise the draft to address the notes. Return only the revised draft text."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        1024
+      ],
+      "id": "6aa6b7a6-3a81-4703-ba9c-b899ad03c12e",
+      "name": "ReviseDraft",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5906edb2-decb-4861-970d-f7369c26a1ba",
+              "name": "draft_content",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "keyword, recommended_headings",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1360,
+        1024
+      ],
+      "id": "14ea3b35-6a82-4ece-8412-8b95d8ea1d28",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=condense{{ $('GetTodayPost').item.json.draft_content }}  into a LinkedIn-style post (shorter, punchier, maybe with a hook and a CTA)"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1088,
+        720
+      ],
+      "id": "55cd20ad-d4ac-4bdd-bd59-ab2a4f455e2d",
+      "name": "RepurposeLinkedIn",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=condense{{ $('GetTodayPost').item.json.draft_content }}  into a newsletter section (intro line + summary + link placeholder).\nEnsure you use paragraphs and spacing for readability.\n\nOutput only the final newsletter. \nDo no included e.g \"Here's a condensed newsletter section based on your article:\\n\\n**"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1072,
+        848
+      ],
+      "id": "48252848-cf1e-4fd1-90e7-88c6c58f7a93",
+      "name": "RepurposeNewsletter",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk",
+          "mode": "list",
+          "cachedResultName": "Keywords",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "=Published",
+            "scheduled_day": "={{ $('GetTodayPost').item.json.scheduled_day }}"
+          },
+          "matchingColumns": [
+            "scheduled_day"
+          ],
+          "schema": [
+            {
+              "id": "keyword",
+              "displayName": "keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "volume",
+              "displayName": "volume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "difficulty",
+              "displayName": "difficulty",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "cpc",
+              "displayName": "cpc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "has_paa",
+              "displayName": "has_paa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "scheduled_day",
+              "displayName": "scheduled_day",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "draft_content",
+              "displayName": "draft_content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "recommended_headings",
+              "displayName": "recommended_headings",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1408,
+        560
+      ],
+      "id": "8c30eed7-f1ef-4c76-97e4-5339c3fac478",
+      "name": "UpdateStatus"
+    },
+    {
+      "parameters": {
+        "sendTo": "byangamosjerry@gmail.com",
+        "subject": "Unlock Your Business Potential with AI Automation",
+        "emailType": "text",
+        "message": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        848
+      ],
+      "id": "30283da4-7fdc-475e-9cec-63244e5a7f20",
+      "name": "PublishNewsletter",
+      "webhookId": "e6e32e97-1ad1-4b3f-b938-8b93e27cf33c"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2272,
+        32
+      ],
+      "id": "b6db2200-7019-451b-800c-703d2cb65119",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        560
+      ],
+      "id": "2bbf83c7-30a2-494c-befd-fe99f65dde3f",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        848
+      ],
+      "id": "6c4835e5-cc5c-4d91-9422-867f26d22fec",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        960,
+        544
+      ],
+      "id": "169aea8d-0768-4d22-931f-5beeb2b6a2d2",
+      "name": "No Operation, do nothing3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://webhook.site/dcfb0e98-3221-4511-97f6-75a9e3e54c68",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"keyword\": $json.keyword,\n  \"draft_content\": $json.draft_content\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1200,
+        560
+      ],
+      "id": "6df6bdb1-18e8-4e3f-98b0-4615590bdcf5",
+      "name": "PublishWebsite"
+    },
+    {
+      "parameters": {
+        "jsCode": "const groups = $input.all();\nconst domainSet = new Set();\n\ngroups.forEach(item => {\n  (item.json.pages || []).forEach(p => {\n    if (p.url) {\n      try {\n        const domain = new URL(p.url).hostname.replace(/^www\\./, '');\n        domainSet.add(domain);\n      } catch (e) {}\n    }\n  });\n});\n\nreturn Array.from(domainSet).map(domain => ({ json: { competitor_domain: domain } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        208
+      ],
+      "id": "94e2718a-3b8d-4f4f-a8e4-92e76292d700",
+      "name": "ExtractCompetitorDomains"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.dataforseo.com/v3/backlinks/referring_domains/live",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=[\n  {\n    \"target\": \"{{ $json.competitor_domain }}\",\n    \"limit\": 5,\n    \"order_by\": [\"rank,desc\"]\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2352,
+        208
+      ],
+      "id": "766defdb-a372-45d4-a8fd-379c5f1e450d",
+      "name": "GetReferringDomains"
+    },
+    {
+      "parameters": {
+        "jsCode": "const responses = $input.all();\nconst domains = $('ExtractCompetitorDomains').all();\n\nconst rows = [];\nresponses.forEach((resp, i) => {\n  const competitor = domains[i]?.json?.competitor_domain || 'unknown';\n  const items = resp.json.tasks?.[0]?.result?.[0]?.items || [];\n  items.forEach(d => {\n    rows.push({\n      json: {\n        competitor_domain: competitor,\n        referring_domain: d.domain,\n        domain_rank: d.rank,\n        backlinks: d.backlinks,\n        why_fit: `Links to ${competitor}, a site ranking for your target keywords`,\n        outreach_angle: 'Guest post pitch or resource link request',\n        date_added: new Date().toISOString().slice(0, 10)\n      }\n    });\n  });\n});\n\nreturn rows;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2576,
+        208
+      ],
+      "id": "eb9aec60-4663-48ad-84f2-e21462490459",
+      "name": "ParseBacklinks"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1TFRMF6zj-1w7J-nqYxUTZ7cg4dHQzSDF244Hs9lXxjk",
+          "mode": "list",
+          "cachedResultName": "Keywords"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "BacklinkTargets",
+          "mode": "list",
+          "cachedResultName": "BacklinkTargets"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "competitor_domain": "={{ $json.competitor_domain }}",
+            "referring_domain": "={{ $json.referring_domain }}",
+            "domain_rank": "={{ $json.domain_rank }}",
+            "backlinks": "={{ $json.backlinks }}",
+            "why_fit": "={{ $json.why_fit }}",
+            "outreach_angle": "={{ $json.outreach_angle }}",
+            "date_added": "={{ $json.date_added }}"
+          },
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2800,
+        208
+      ],
+      "id": "51b6378d-d5e3-4ba3-a9e7-cf4c7a1cc23b",
+      "name": "SaveBacklinkTargets"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        720
+      ],
+      "id": "5ea85338-37f8-4b2a-9372-7bf65e571e42",
+      "name": "Create a post"
+    },
+    {
+      "parameters": {
+        "content": "## Backlinks Opportunity Research\n",
+        "height": 192,
+        "width": 1008
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2064,
+        176
+      ],
+      "typeVersion": 1,
+      "id": "de38225d-6f1c-414b-b1a4-1b55ead2b508",
+      "name": "Sticky Note3"
+    }
+  ],
+  "connections": {
+    "WeeklyTrigger": {
+      "main": [
+        [
+          {
+            "node": "GetKeywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetKeywords": {
+      "main": [
+        [
+          {
+            "node": "SplitKeywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FilterKeywords": {
+      "main": [
+        [
+          {
+            "node": "CombineKeywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CombineKeywords": {
+      "main": [
+        [
+          {
+            "node": "JudgeRelevance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JudgeRelevance": {
+      "main": [
+        [
+          {
+            "node": "ScoreKeywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetExistingKeywords": {
+      "main": [
+        [
+          {
+            "node": "CheckDuplicateKeywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckDuplicateKeywords": {
+      "main": [
+        [
+          {
+            "node": "TopUpFromRelated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SaveKeywords": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SplitKeywords": {
+      "main": [
+        [
+          {
+            "node": "FilterKeywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ScoreKeywords": {
+      "main": [
+        [
+          {
+            "node": "GetExistingKeywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RankAndCap": {
+      "main": [
+        [
+          {
+            "node": "SaveKeywords",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GetSERP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TopUpFromRelated": {
+      "main": [
+        [
+          {
+            "node": "RankAndCap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetSERP": {
+      "main": [
+        [
+          {
+            "node": "ParseSERP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ParseSERP": {
+      "main": [
+        [
+          {
+            "node": "SplitByResult",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SplitByResult": {
+      "main": [
+        [
+          {
+            "node": "TrimToTop3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TrimToTop3": {
+      "main": [
+        [
+          {
+            "node": "FetchCompetitorPages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FetchCompetitorPages": {
+      "main": [
+        [
+          {
+            "node": "ExtractArticleText",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HandleFetchErrors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExtractArticleText": {
+      "main": [
+        [
+          {
+            "node": "RestoreKeywordFields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HandleFetchErrors": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "TrimBodyText": {
+      "main": [
+        [
+          {
+            "node": "GroupByKeyword",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GroupByKeyword": {
+      "main": [
+        [
+          {
+            "node": "CompetitorBrief",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ExtractCompetitorDomains",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RestoreKeywordFields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "TrimBodyText",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CompetitorBrief": {
+      "main": [
+        [
+          {
+            "node": "SaveBrief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SaveBrief": {
+      "main": [
+        [
+          {
+            "node": "DraftBlogPost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DraftBlogPost": {
+      "main": [
+        [
+          {
+            "node": "MergeKeywordRow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeKeywordRow": {
+      "main": [
+        [
+          {
+            "node": "UpdateDraftStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UpdateDraftStatus": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DailyPostTrigger": {
+      "main": [
+        [
+          {
+            "node": "GetTodayPost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetTodayPost": {
+      "main": [
+        [
+          {
+            "node": "SendApprovalEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CheckApproval": {
+      "main": [
+        [
+          {
+            "node": "PublishWebsite",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RepurposeLinkedIn",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RepurposeNewsletter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ReviseDraft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendApprovalEmail": {
+      "main": [
+        [
+          {
+            "node": "CheckApproval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ReviseDraft": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "SendApprovalEmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RepurposeLinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RepurposeNewsletter": {
+      "main": [
+        [
+          {
+            "node": "PublishNewsletter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UpdateStatus": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PublishNewsletter": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PublishWebsite": {
+      "main": [
+        [
+          {
+            "node": "UpdateStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExtractCompetitorDomains": {
+      "main": [
+        [
+          {
+            "node": "GetReferringDomains",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetReferringDomains": {
+      "main": [
+        [
+          {
+            "node": "ParseBacklinks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ParseBacklinks": {
+      "main": [
+        [
+          {
+            "node": "SaveBacklinkTargets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "bd6329420b49b0b376c2c172176925791e5245ca4c680c0c88dea2553187c8a4"
+  }
+}
